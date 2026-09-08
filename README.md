@@ -1,162 +1,96 @@
 # CropDoc AI
 
-> **Instant plant diagnosis, powered by AI — no lab, no wait.**
+**English/Hindi AI-assisted crop-health assessment for a hackathon prototype.**
 
-Built with pride for **UP-AI Hackdays**.
+Upload a leaf photo, optionally specify the crop and district/state, and receive a preliminary assessment with visible symptoms, possible causes, safe next steps, and prevention guidance. This is not a validated plant-disease classifier or a substitute for an agronomist.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-emerald.svg)](LICENSE)
-[![Built for Hackathon](https://img.shields.io/badge/Hackathon-UP--AI%20Hackdays-1A4D2E.svg)](#originality-statement)
-[![AI Engine](https://img.shields.io/badge/Primary%20AI-Google%20Gemini%20Vision-4285F4.svg)](#how-ai-is-used)
-[![Fallback Engine](https://img.shields.io/badge/Fallback%20AI-Groq%20Vision-f55036.svg)](#resilient-architecture)
+## Features
 
----
+- Photo preview and explicit submission; JPEG, PNG and WebP support.
+- Optional crop/location context, without needing precise GPS or a new API.
+- English/Hindi output, printable reports, and locally bundled demo samples.
+- Clear uncertainty warnings and an official ICAR KVK portal link for expert help.
+- Gemini → Groq → Mistral fallback, using only explicitly configured model/key pairs.
+- Runtime request/response validation. Invalid model output triggers fallback rather than fabricated defaults.
+- 12-second provider timeouts, a 35-second server provider-chain deadline, client cancellation and a 40-second client deadline.
+- Image decoding, resizing and metadata removal on the backend; no image persistence.
+- Basic request rate limiting, safe public errors, health endpoint, automated tests and CI.
 
-## 🌿 Problem Statement
+There is **no claimed accuracy, uptime guarantee, or guaranteed response time**. Confidence labels are model opinions, not calibrated probabilities. Model availability, quotas, latency, disease quality and treatment safety require testing with your accounts and dataset.
 
-Agriculture forms the economic and nutritional backbone for millions of households. Yet every farming season, smallholder farmers and growers face devastating crop losses—often between **20% to 40% of their total yield**—due to plant pests, blights, nutrient deficiencies, and fungal infections.
+## Stack
 
-In rural and underserved agrarian belts:
-- **Access to Agricultural Extension Officers is Limited**: The ratio of agronomists or plant pathologists to farmers is heavily imbalanced; getting an expert to visit a field in person can take days or weeks.
-- **Delayed & Inaccurate Diagnosis**: Early signs of foliar blight, mildew, or viral mosaic are frequently mistaken for simple water stress or general nutrient shortfall. By the time lesions become obvious, the infection has often colonized the crop canopy.
-- **Costly or Harmful Misapplications**: Without an exact diagnosis, farmers often guess and apply inappropriate chemical fungicides or broad-spectrum pesticides, burning crops, depleting soil biology, and wasting scarce capital.
+React 19, TypeScript, Vite, Tailwind CSS, Motion, Express, Zod, Sharp. Provider calls use server-side HTTP APIs; keys never enter the browser bundle.
 
----
+## Run locally
 
-## 💡 Solution Overview
+Requires **Node.js 22.12+** and npm.
 
-**CropDoc AI** is a lightweight, mobile-first plant pathology companion designed to turn any smartphone or browser into an on-demand agricultural clinic. 
-
-Farmers simply take or upload a photo of a diseased crop leaf. Within seconds, CropDoc AI delivers a structured, actionable diagnosis:
-- **Exact Plant & Disease Identification**: Pinpoints specific pathogens (e.g., Tomato Early Blight, Powdery Mildew, Bacterial Leaf Streak) or confirms whether the leaf is healthy.
-- **Observable Symptoms & Underlying Cause**: Explains why the disease occurred (fungal spore splash, high humidity, insect vectors, or nutrient imbalance).
-- **Graded Severity Level**: Categorizes severity as *Mild*, *Moderate*, or *Severe* with color-coded alerts to guide immediate response.
-- **Actionable Treatment Protocol**: Offers step-by-step guidance combining organic cultural practices (neem sprays, pruning, irrigation adjustments) and approved targeted treatments.
-- **Preventive Best Practices**: Equips the farmer with long-term prevention strategies (crop rotation, resistant cultivars, optimal plant spacing).
-- **Bilingual Interface (English & Hindi)**: Delivers all medical-botanical explanations and treatment instructions in simple, regionally accessible English or authentic Hindi (हिंदी).
-
----
-
-## 🚀 Key Features
-
-- **Instant Leaf Photo Upload & Drag-and-Drop**: Supports mobile camera capture, file uploads, and curated 1-click test samples (including Tomato Early Blight, Leaf Chlorosis, Mildew, and non-plant edge case testing).
-- **Direct Multimodal AI Pathology**: Employs vision-language reasoning to detect botanical anomalies directly from visual leaf patterns without needing heavy, inflexible convolutional classifier heads.
-- **Structured, Standardized Output**: Enforces strict, typed schema outputs guaranteeing consistent diagnosis fields (plant name, pathogen, severity, causes, steps, and tips).
-- **High-Availability Fallback Architecture**: Includes automated multi-tier failover (Google Gemini primary vision with sub-second Groq Vision fallback) to guarantee 99.9% uptime during high-concurrency hackathon judging or sudden upstream rate-limits.
-- **Color-Coded Severity Visualization**: Distinct visual badges (Emerald for Healthy, Amber for Moderate, Crimson for Severe) give farmers immediate situational awareness.
-- **Bilingual Accessibility (English & Hindi)**: Instant toggle enables farmers to receive treatments in their preferred language with regional agricultural terminology.
-- **Non-Plant Leaf Guardrail**: Protects users from misdiagnosis by verifying that the image is a valid botanical specimen before attempting disease analysis.
-
----
-
-## 🛠️ Technology Stack
-
-| Layer | Technologies |
-| :--- | :--- |
-| **Primary Multimodal Vision** | **Google Gemini API** (`gemini-3.6-flash` / `gemini-3.8-flash`) via `@google/genai` TypeScript SDK |
-| **Fallback Vision Engine** | **Groq Vision API** (`qwen/qwen3.8-27b` / `qwen/qwen3.6-27b`) via high-speed inference |
-| **Tertiary Vision Engine** | **Mistral Pixtral Vision** (`pixtral-12b-2409`) multimodal Chat Completions |
-| **Frontend Framework** | **React 18**, **TypeScript**, **Vite** |
-| **Styling & Design System** | **Tailwind CSS**, Glassmorphic organic UI design, Lucide Icons |
-| **Animations & Transitions** | **Motion** (`motion/react`) for tactile feedback and smooth layout shifts |
-| **Backend & API Layer** | **Node.js**, **Express**, Server-side API key isolation (`/api/diagnose`) |
-| **Prototyping & Hosting** | **Google AI Studio Build**, Cloud Run container environment |
-
----
-
-## 🧠 How AI Is Used
-
-Unlike legacy agricultural apps that chain together brittle, pre-trained CNN image classification models with generic, separate chatbot prompts:
-
-1. **Direct Visual Reasoning (Zero-Shot & Few-Shot Botanical Intelligence)**:
-   Gemini analyzes the uploaded leaf's visual features directly—evaluating concentric lesion rings, leaf margin chlorosis, vascular wilting, and fungal mycelium patterns.
-2. **Context-Aware Etiology & Pathology**:
-   The AI reasons over host plant species, pathogen lifecycle, and infection vectors (such as *Alternaria solani* in nightshades) to explain the root cause rather than merely returning a raw classification label.
-3. **Structured Schema Enforcement**:
-   The multimodal model is constrained by strict JSON schema definitions, returning typed arrays of treatment steps, preventive guidelines, and severity ratings that directly populate the interactive UI.
-4. **AI is the Core Engine, Not a Gimmick**:
-   AI does not sit in an optional chat widget; it powers the central end-to-end diagnostic workflow, localization pipeline, and agricultural advisory synthesis.
-
----
-
-## 💻 Setup & Installation Instructions
-
-Follow these steps to run CropDoc AI locally on your development machine:
-
-### Prerequisites
-- **Node.js** (v18.0.0 or higher)
-- **npm** or **bun** / **yarn**
-- **Gemini API Key** from [Google AI Studio](https://aistudio.google.com/)
-- *(Optional)* **Groq API Key** from [Groq Console](https://console.groq.com/) for fallback redundancy
-
-### 1. Clone the Repository
-```bash
-git clone https://github.com/your-username/cropdoc-ai.git
-cd cropdoc-ai
-```
-
-### 2. Install Dependencies
-```bash
-npm install
-```
-
-### 3. Configure Environment Variables
-Create a `.env` file in the root directory (based on `.env.example`):
-```bash
+```sh
+git clone https://github.com/Yuser00123/CropDoc.git
+cd CropDoc
+npm ci
 cp .env.example .env
 ```
 
-Add your API credentials:
-```env
-# Required for primary diagnosis
-GEMINI_API_KEY=your_google_gemini_api_key_here
+Configure at least one complete key/model pair in `.env`:
 
-# Optional: Enables high-availability fallback
-GROQ_API_KEY=your_groq_api_key_here
-MISTRAL_API_KEY=your_mistral_api_key_here
+```dotenv
+GEMINI_API_KEY=your_key
+GEMINI_MODEL=your_current_vision_model_id
+# Optional fallback providers, each requiring both values:
+GROQ_API_KEY=
+GROQ_MODEL=
+MISTRAL_API_KEY=
+MISTRAL_MODEL=
 ```
 
-### 4. Run the Application
-```bash
+Obtain exact supported vision-model IDs from your provider account. There are deliberately no guessed defaults. Never commit `.env`. The server loads it automatically. Restart after configuration changes.
+
+```sh
 npm run dev
 ```
-Open your browser and navigate to `http://localhost:3000`.
 
-### 5. Production Build
-```bash
+Open http://localhost:3000. `/api/health` reports whether a complete provider pair is present, not whether credentials/models have been verified. The UI can run without keys, but live assessment cannot.
+
+## Production
+
+```sh
 npm run build
 npm start
 ```
 
----
+`npm start` sets production mode (POSIX shell), serves built assets, and binds `0.0.0.0` on `PORT` (default 3000). On Windows use WSL or set `NODE_ENV=production` before `node dist/server.cjs`. Set secrets in the deployment environment. Preview hosts under `.e2b.app` are allowed in development; browser API calls use relative URLs.
 
-## 🌐 Live Application
+Only set `TRUST_PROXY_HOPS` to the verified number of reverse-proxy hops for your hosting topology. The limiter allows 10 diagnosis requests/minute per detected client IP and uses process-local storage; multi-instance deployment needs shared or gateway-level limiting. Keep API quotas and spending caps enabled.
 
-- **Live Application URL**: [https://ais-pre-wj7uc2inrb3lneoqcbem6s-681200556799.asia-southeast1.run.app](https://ais-pre-wj7uc2inrb3lneoqcbem6s-681200556799.asia-southeast1.run.app)
+## Checks
 
----
+```sh
+npm run lint  # TypeScript check, not an ESLint style check
+npm test      # Validation, image decoding, mocked fallback, cancellation and API checks
+npm run build
+npm audit
+```
 
-## 🌍 Impact & Future Scope
+GitHub Actions runs install, type-check, tests, build, and a high-severity dependency audit. A lockfile pins dependency resolution. A temporary `qs` override selects a patched release; review it when upgrading Express/body-parser.
 
-### Real-World Impact
-- **Saves Agricultural Yield**: Enables early-stage detection before fungal spores or viral blights spread across an entire field.
-- **Democratizes Agronomy**: Bridges the digital divide for smallholder farmers by putting expert diagnostic knowledge directly into their hands for free.
-- **Reduces Chemical Contamination**: Guides farmers toward targeted cultural remedies and organic solutions, preventing excessive pesticide application.
+## Evaluation and demo
 
-### Future Roadmap
-- **Offline Edge Inference**: Package lightweight quantized vision models for zero-connectivity field operation in remote rural zones.
-- **Regional Dialect & Voice Input**: Integrate vernacular audio input and spoken audio diagnostic playback for low-literacy farmers.
-- **Local Weather & Microclimate Alerts**: Correlate hyper-local weather forecast data (humidity, upcoming rains) with fungal spore risk models to alert farmers proactively.
-- **Government & Agri-Kendra Helpline Bridge**: One-click escalation to connect local agricultural universities, Krishi Vigyan Kendras (KVK), or state agronomists.
-- **Farm History & Disease Timeline**: Track recurring field infections season-over-season to optimize crop rotation planning.
+See [the evaluation and judging checklist](docs/EVALUATION.md) for a labeled dataset protocol, opt-in live evaluation runner, and demo checklist. No evaluation results are fabricated or bundled. Most former external stock-photo samples were removed to avoid runtime network dependencies and unverified disease labels. The retained spotted-leaf image is unverified; confirm its source/license before redistribution.
 
----
+Language switching on a result **reassesses the photo** in the selected language and may change the result. It is not a deterministic translation. Input context is advisory and does not provide live weather or verified local pesticide regulations.
 
-## 📜 Originality Statement
+## Safety and privacy
 
-This project, **CropDoc AI**, was ideated, architected, and developed specifically for the **UPAI Hackdays** hackathon. All source code, multimodal prompts, UI components, and fallback integrations represent original work created in accordance with the hackathon rules and guidelines.
+This prototype gives preliminary guidance only. Low-confidence or severe findings should be reviewed by an agricultural expert. Photos cannot confirm every pathogen or distinguish all nutrient/environmental issues. Check local product labels and consult an expert before chemical treatment.
 
----
+Images and optional context are sent to configured external AI providers (including fallbacks). The app does not store photos, but provider data policies apply. Avoid faces, precise addresses and personal details. Do not expose provider error bodies or API keys in logs/client responses.
 
-## 📄 License
+## Hackathon submission
 
-This project is licensed under the [MIT License](LICENSE) — see the LICENSE file for details.
+Confirm the event’s rules on pre-existing work, AI-assisted coding and image licensing. Add your team details, a verified deployment URL, a short demo recording, and actual evaluation findings before submitting. Originality and eligibility are not automatically certified by this repository.
+
+## License
+
+See [LICENSE](LICENSE). Preserve any applicable third-party notices, and verify image rights separately.

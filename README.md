@@ -3,7 +3,32 @@
 **English/Hindi AI-assisted crop-health assessment for a hackathon prototype.**
 
 Upload a leaf photo, optionally specify the crop and district/state, and receive a preliminary assessment with visible symptoms, possible causes, safe next steps, and prevention guidance. This is not a validated plant-disease classifier or a substitute for an agronomist.
+---
 
+## 🌿 Problem Statement
+
+Agriculture forms the economic and nutritional backbone for millions of households. Yet every farming season, smallholder farmers and growers face devastating crop losses—often between **20% to 40% of their total yield**—due to plant pests, blights, nutrient deficiencies, and fungal infections.
+
+In rural and underserved agrarian belts:
+- **Access to Agricultural Extension Officers is Limited**: The ratio of agronomists or plant pathologists to farmers is heavily imbalanced; getting an expert to visit a field in person can take days or weeks.
+- **Delayed & Inaccurate Diagnosis**: Early signs of foliar blight, mildew, or viral mosaic are frequently mistaken for simple water stress or general nutrient shortfall. By the time lesions become obvious, the infection has often colonized the crop canopy.
+- **Costly or Harmful Misapplications**: Without an exact diagnosis, farmers often guess and apply inappropriate chemical fungicides or broad-spectrum pesticides, burning crops, depleting soil biology, and wasting scarce capital.
+
+---
+
+## 💡 Solution Overview
+
+**CropDoc AI** is a lightweight, mobile-first plant pathology companion designed to turn any smartphone or browser into an on-demand agricultural clinic. 
+
+Farmers simply take or upload a photo of a diseased crop leaf. Within seconds, CropDoc AI delivers a structured, actionable diagnosis:
+- **Exact Plant & Disease Identification**: Pinpoints specific pathogens (e.g., Tomato Early Blight, Powdery Mildew, Bacterial Leaf Streak) or confirms whether the leaf is healthy.
+- **Observable Symptoms & Underlying Cause**: Explains why the disease occurred (fungal spore splash, high humidity, insect vectors, or nutrient imbalance).
+- **Graded Severity Level**: Categorizes severity as *Mild*, *Moderate*, or *Severe* with color-coded alerts to guide immediate response.
+- **Actionable Treatment Protocol**: Offers step-by-step guidance combining organic cultural practices (neem sprays, pruning, irrigation adjustments) and approved targeted treatments.
+- **Preventive Best Practices**: Equips the farmer with long-term prevention strategies (crop rotation, resistant cultivars, optimal plant spacing).
+- **Bilingual Interface (English & Hindi)**: Delivers all medical-botanical explanations and treatment instructions in simple, regionally accessible English or authentic Hindi (हिंदी).
+
+---
 ## Features
 
 - Photo preview and explicit submission; JPEG, PNG and WebP support.

@@ -1,0 +1,6 @@
+{
+  "name": "CropDoc AI",
+  "description": "AI-powered plant disease diagnosis tool for farmers. Upload a leaf photo to analyze diseases, severity, treatment steps, and prevention in English or Hindi.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

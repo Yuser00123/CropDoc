@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Navbar } from "./components/Navbar";
 import { UploadSection } from "./components/UploadSection";
 import { LoadingState } from "./components/LoadingState";
@@ -14,6 +14,15 @@ import { processImageFile, fetchImageUrlAsBase64 } from "./utils/imageUtils";
 import { AlertCircle, RefreshCw } from "lucide-react";
 
 export default function App() {
+  const [aiConfigured, setAiConfigured] = useState<boolean | null>(null);
+  useEffect(() => {
+    fetch("/api/health").then(r => r.json()).then(data => setAiConfigured(data.aiConfigured)).catch(() => setAiConfigured(null));
+    return () => activeRequest.current?.abort();
+  }, []);
+  const [crop, setCrop] = useState("");
+  const [location, setLocation] = useState("");
+  const activeRequest = useRef<AbortController | null>(null);
+  const requestVersion = useRef(0);
   const [language, setLanguage] = useState<SupportedLanguage>("en");
   const [currentBase64, setCurrentBase64] = useState<string | null>(null);
   const [currentMimeType, setCurrentMimeType] = useState<string>("image/jpeg");
@@ -33,6 +42,11 @@ export default function App() {
     targetLang: SupportedLanguage,
     isLanguageSwitch: boolean = false
   ) => {
+    activeRequest.current?.abort();
+    const controller = new AbortController();
+    activeRequest.current = controller;
+    const version = ++requestVersion.current;
+    const timeout = setTimeout(() => controller.abort(), 40000);
     if (isLanguageSwitch) {
       setIsReanalyzing(true);
     } else {
@@ -46,6 +60,7 @@ export default function App() {
     try {
       const res = await fetch("/api/diagnose", {
         method: "POST",
+        signal: controller.signal,
         headers: {
           "Content-Type": "application/json",
         },
@@ -53,6 +68,7 @@ export default function App() {
           imageBase64: base64,
           mimeType,
           language: targetLang,
+          crop, location,
         }),
       });
 
@@ -78,19 +94,8 @@ export default function App() {
         );
       }
 
+      if (version !== requestVersion.current) return;
       const data: PlantDiagnosis = json.data;
-
-      // Log AI provider and model info to browser console for demo/debugging verification
-      console.log(
-        `%c[CropDoc AI] Diagnosis succeeded via ${json.providerLabel || "Gemini"} (${json.model || "gemini-3.8-flash"})`,
-        "color: #15803d; font-weight: bold;"
-      );
-      if (json.fallbackUsed) {
-        console.warn(
-          `[CropDoc AI] Fallback active: Gemini timed out or had rate-limit error. Groq backup model (${json.model}) successfully handled the analysis.`,
-          json.geminiError ? { geminiError: json.geminiError } : ""
-        );
-      }
 
       // Check if image is detected as a plant leaf
       if (data.is_plant_leaf === false) {
@@ -103,16 +108,20 @@ export default function App() {
         setNonPlantMessage(null);
       }
     } catch (err: any) {
+      if (version !== requestVersion.current) return;
       console.error("[CropDoc AI] Diagnosis request failed:", err);
-      // Ensure user sees clear friendly error message without raw error codes
+      // Server errors are sanitized; display actionable configuration and rate-limit errors.
       setApiError(
-        targetLang === "hi"
+        targetLang !== "hi" && err?.name !== "AbortError" && err?.message ? err.message : targetLang === "hi"
           ? "हमारी एआई सेवा वर्तमान में व्यस्त है। कृपया कुछ क्षण बाद पुनः प्रयास करें।"
           : "Our AI service is temporarily busy. Please try again in a moment."
       );
     } finally {
-      setIsAnalyzing(false);
-      setIsReanalyzing(false);
+      clearTimeout(timeout);
+      if (version === requestVersion.current) {
+        setIsAnalyzing(false);
+        setIsReanalyzing(false);
+      }
     }
   };
 
@@ -120,16 +129,17 @@ export default function App() {
   const handleImageFile = async (file: File) => {
     try {
       setApiError(null);
+      setCurrentBase64(null);
+      setPreviewUrl(null);
       const { base64, mimeType, dataUrl } = await processImageFile(file);
       setCurrentBase64(base64);
       setCurrentMimeType(mimeType);
       setPreviewUrl(dataUrl);
 
-      // Trigger analysis immediately upon file upload
-      await executeDiagnosis(base64, mimeType, language, false);
+      // Let the farmer review the image and context before submitting.
     } catch (err: any) {
       console.error("Failed to read image file:", err);
-      setApiError("Could not process the selected image file. Please try another.");
+      setApiError(language === "hi" ? "5 MB से छोटी JPEG, PNG या WebP तस्वीर चुनें।" : "Choose a valid JPEG, PNG or WebP image under 5 MB.");
     }
   };
 
@@ -137,6 +147,7 @@ export default function App() {
   const handleSampleSelected = async (sample: SampleLeaf) => {
     try {
       setApiError(null);
+      setCurrentBase64(null);
       setPreviewUrl(sample.imageUrl);
       setIsAnalyzing(true);
       setDiagnosis(null);
@@ -147,9 +158,10 @@ export default function App() {
       setCurrentMimeType(mimeType);
       setPreviewUrl(dataUrl);
 
-      await executeDiagnosis(base64, mimeType, language, false);
+      setIsAnalyzing(false);
     } catch (err: any) {
       console.error("Failed to load sample leaf:", err);
+      setPreviewUrl(null);
       setApiError("Failed to load sample image. Please try uploading your own photo.");
       setIsAnalyzing(false);
     }
@@ -161,7 +173,7 @@ export default function App() {
     setLanguage(newLang);
 
     // If an image has already been uploaded/analyzed, re-request in the newly selected language
-    if (currentBase64) {
+    if (currentBase64 && diagnosis) {
       executeDiagnosis(currentBase64, currentMimeType, newLang, true);
     }
   };
@@ -174,6 +186,10 @@ export default function App() {
 
   // Reset to upload screen
   const handleReset = () => {
+    activeRequest.current?.abort();
+    requestVersion.current++;
+    setIsAnalyzing(false);
+    setIsReanalyzing(false);
     setDiagnosis(null);
     setNonPlantDetected(false);
     setNonPlantMessage(null);
@@ -191,6 +207,7 @@ export default function App() {
         isAnalyzing={isAnalyzing || isReanalyzing}
       />
 
+      {aiConfigured === false && <div role="status" className="mx-auto max-w-4xl m-4 p-4 rounded-xl bg-amber-100 text-amber-950 text-sm">{language === "hi" ? "डेमो सेटअप आवश्यक: सर्वर पर API कुंजी और विज़न मॉडल कॉन्फ़िगर करें। अभी लाइव आकलन उपलब्ध नहीं है।" : "Demo setup required: configure an API key and vision model on the server. Live assessment is not available yet."}</div>}
       {/* Main Container */}
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {/* Friendly AI Service Busy Banner with Retry Button */}
@@ -257,7 +274,14 @@ export default function App() {
 
         {/* View 4: Upload & Sample Leaves (Default View) */}
         {!isAnalyzing && !diagnosis && !nonPlantDetected && (
-          <UploadSection
+          <><section className="max-w-4xl mx-auto mb-6 p-5 bg-white rounded-2xl border border-stone-200">
+            <h2 className="font-bold mb-3">{language === "hi" ? "फसल की जानकारी (वैकल्पिक)" : "Crop context (optional)"}</h2>
+            <div className="grid sm:grid-cols-2 gap-4">
+              <label className="text-sm">{language === "hi" ? "फसल" : "Crop"}<input value={crop} onChange={e => setCrop(e.target.value)} maxLength={80} placeholder={language === "hi" ? "जैसे टमाटर" : "e.g. Tomato"} className="block border rounded-lg p-3 mt-1 w-full" /></label>
+              <label className="text-sm">{language === "hi" ? "जिला / राज्य" : "District / state"}<input value={location} onChange={e => setLocation(e.target.value)} maxLength={120} placeholder={language === "hi" ? "जैसे लखनऊ, उत्तर प्रदेश" : "e.g. Lucknow, Uttar Pradesh"} className="block border rounded-lg p-3 mt-1 w-full" /></label>
+            </div>
+            <p className="text-xs text-stone-600 mt-3">{language === "hi" ? "तस्वीर और यह जानकारी बाहरी AI प्रदाता को भेजी जाएगी। सटीक पता या व्यक्तिगत जानकारी न दें। यह ऐप तस्वीरें संग्रहीत नहीं करता; प्रदाता की डेटा नीतियां लागू होती हैं।" : "Your photo and context are sent to an external AI provider. Do not include an exact address or personal information. This app does not store photos; provider data policies apply."}</p>
+          </section><UploadSection
             language={language}
             onImageSelected={handleImageFile}
             onSampleSelected={handleSampleSelected}
@@ -269,7 +293,7 @@ export default function App() {
               }
             }}
             isAnalyzing={isAnalyzing}
-          />
+          /></>
         )}
       </main>
 

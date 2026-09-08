@@ -7,6 +7,9 @@ export async function processImageFile(file: File, maxDimension: number = 1024):
   mimeType: string;
   dataUrl: string;
 }> {
+  if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 5 * 1024 * 1024) {
+    throw new Error("Choose a JPEG, PNG or WebP image under 5 MB.");
+  }
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onerror = () => reject(new Error("Failed to read image file"));

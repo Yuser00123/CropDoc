@@ -91,7 +91,7 @@ export const UploadSection: React.FC<UploadSectionProps> = ({
           ref={fileInputRef}
           type="file"
           id="leaf-file-input"
-          accept="image/jpeg,image/png,image/jpg"
+          accept="image/jpeg,image/png,image/webp"
           onChange={handleFileChange}
           className="hidden"
           disabled={isAnalyzing}
@@ -128,12 +128,12 @@ export const UploadSection: React.FC<UploadSectionProps> = ({
                   <span>{language === "hi" ? "फोटो तैयार है" : "Image Ready for Analysis"}</span>
                 </span>
                 <h3 className="text-xl font-bold text-emerald-950 font-['Outfit',sans-serif]">
-                  {language === "hi" ? "रोग विश्लेषण प्रारंभ करें" : "Ready to Diagnose Leaf"}
+                  {language === "hi" ? "रोग विश्लेषण प्रारंभ करें" : "Ready for a Preliminary Assessment"}
                 </h3>
                 <p className="text-xs sm:text-sm text-stone-700 mt-1 leading-relaxed">
                   {language === "hi"
                     ? "जेमिनी एआई पत्ती के फफूंद, कीड़े, धब्बे और पोषक तत्वों की कमी की जांच करेगा।"
-                    : "Gemini AI will inspect this leaf for fungal spores, blight, pest activity, and nutrient stress."}
+                    : "AI will assess visible leaf symptoms and suggest possible causes, not a confirmed diagnosis."}
                 </p>
               </div>
 
@@ -146,7 +146,7 @@ export const UploadSection: React.FC<UploadSectionProps> = ({
                   className="px-6 py-3 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm shadow-md shadow-emerald-900/15 flex items-center space-x-2 transition-all transform active:scale-95 whitespace-nowrap"
                 >
                   <Sparkles className="w-4 h-4 text-emerald-200" />
-                  <span>{language === "hi" ? "निदान शुरू करें" : "Diagnose Plant Leaf"}</span>
+                  <span>{language === "hi" ? "निदान शुरू करें" : "Assess Leaf Health"}</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
 

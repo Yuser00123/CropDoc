@@ -88,6 +88,13 @@ export const DiagnosisResultView: React.FC<DiagnosisResultViewProps> = ({
       className="w-full max-w-5xl mx-auto space-y-6 pb-16 print:p-0 print:m-0"
     >
       {/* Top Banner with Quick Actions */}
+      <section className="p-5 rounded-2xl border border-amber-300 bg-amber-50 text-amber-950" aria-label="Assessment limitations">
+        <h2 className="font-bold">{language === "hi" ? "प्रारंभिक AI आकलन — पुष्टि किया हुआ निदान नहीं" : "Preliminary AI assessment — not a confirmed diagnosis"}</h2>
+        <p className="text-sm mt-2">{language === "hi" ? "विश्वास स्तर AI का अनुमान है, मापी गई सटीकता नहीं। तस्वीर से कई रोग एक जैसे दिख सकते हैं। रसायनों का उपयोग करने से पहले स्थानीय लेबल और कृषि विशेषज्ञ की सलाह लें।" : "Confidence is the model’s opinion, not measured accuracy. Several conditions can look alike in a photo. Check local product labels and consult an agricultural expert before using chemicals."}</p>
+        {(diagnosis.confidence_level === "Low" || diagnosis.severity_level === "Severe") && <p className="font-semibold mt-3">{language === "hi" ? "विशेषज्ञ समीक्षा आवश्यक: स्पष्ट तस्वीरें लें और अपने नजदीकी KVK से संपर्क करें।" : "Expert review recommended: take clear photos and contact your nearest KVK before acting on this assessment."}</p>}
+        <p className="text-sm mt-3">{language === "hi" ? "विशेषज्ञ को फसल, जिला, लक्षण कब शुरू हुए और किए गए उपचार बताएं। रिपोर्ट सहेज कर साथ ले जाएं।" : "Share your crop, district, when symptoms began, and any treatments already tried. Save this report to take with you."}</p>
+        <a href="https://kvk.icar.gov.in/" target="_blank" rel="noopener noreferrer" className="inline-block mt-3 underline font-semibold">{language === "hi" ? "आधिकारिक ICAR KVK पोर्टल खोलें ↗" : "Open the official ICAR KVK portal ↗"}</a>
+      </section>
       <div className="flex flex-wrap items-center justify-between gap-3 px-1 print:hidden">
         <div className="flex items-center space-x-2">
           <button
@@ -118,7 +125,7 @@ export const DiagnosisResultView: React.FC<DiagnosisResultViewProps> = ({
         >
           <Languages className="w-4 h-4 text-emerald-200" />
           <span>
-            {language === "en" ? "Translate to हिंदी (Hindi)" : "View in English"}
+            {language === "en" ? "Reassess in हिंदी (Hindi)" : "Reassess in English"}
           </span>
           {isReanalyzing && (
             <span className="w-2 h-2 rounded-full bg-lime-300 animate-ping" />
